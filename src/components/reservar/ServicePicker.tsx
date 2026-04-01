@@ -1,5 +1,4 @@
 // src/components/reservar/ServicePicker.tsx
-// Client component — category tabs + service cards
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,19 +15,14 @@ type Service = {
 export function ServicePicker({ services }: { services: Service[] }) {
   const router = useRouter();
 
-  // Build unique category list preserving order
-  const cats = ['Todos', ...Array.from(new Set(services.map(s => s.category).filter(Boolean)))];
-  const [active, setActive] = useState('Todos');
+  const cats = ['Todos', ...Array.from(new Set(services.map(s => s.category).filter((c): c is string => c !== null)))];
+  const [active, setActive] = useState<string>('Todos');
 
   const filtered = active === 'Todos' ? services : services.filter(s => s.category === active);
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-
-      {/* Category tabs */}
-      <div style={{
-        display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem',
-      }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
         {cats.map(cat => (
           <button key={cat} onClick={() => setActive(cat)} style={{
             padding: '0.4rem 1rem',
@@ -44,10 +38,9 @@ export function ServicePicker({ services }: { services: Service[] }) {
         ))}
       </div>
 
-      {/* Service cards grid */}
       {filtered.length === 0 ? (
         <p style={{ textAlign: 'center', color: 'var(--color-text-muted, #7a7974)', padding: '3rem' }}>
-          No hay servicios disponibles en esta categoría.
+          No hay servicios disponibles en esta categoria.
         </p>
       ) : (
         <div style={{
@@ -76,19 +69,19 @@ export function ServicePicker({ services }: { services: Service[] }) {
                 (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
               }}
             >
-              {/* Category badge */}
-              <span style={{
-                display: 'inline-block', padding: '0.2rem 0.625rem',
-                background: 'rgba(1,105,111,0.08)',
-                color: '#01696f', borderRadius: '9999px',
-                fontSize: '0.7rem', fontWeight: 700,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                alignSelf: 'flex-start',
-              }}>
-                {svc.category}
-              </span>
+              {svc.category && (
+                <span style={{
+                  display: 'inline-block', padding: '0.2rem 0.625rem',
+                  background: 'rgba(1,105,111,0.08)',
+                  color: '#01696f', borderRadius: '9999px',
+                  fontSize: '0.7rem', fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  alignSelf: 'flex-start',
+                }}>
+                  {svc.category}
+                </span>
+              )}
 
-              {/* Name */}
               <p style={{
                 fontSize: '1rem', fontWeight: 600,
                 color: 'var(--color-text, #28251d)', margin: 0, lineHeight: 1.3,
@@ -96,7 +89,6 @@ export function ServicePicker({ services }: { services: Service[] }) {
                 {svc.name}
               </p>
 
-              {/* Description */}
               {svc.description && (
                 <p style={{
                   fontSize: '0.82rem', color: 'var(--color-text-muted, #7a7974)',
@@ -108,26 +100,19 @@ export function ServicePicker({ services }: { services: Service[] }) {
                 </p>
               )}
 
-              {/* Meta row */}
               <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto', flexWrap: 'wrap' }}>
-                <span style={meta}>⏱ {svc.duration_minutes} min</span>
-                {svc.price_eur != null && (
-                  <span style={meta}>💶 {svc.price_eur}€</span>
-                )}
-                {svc.allow_home_visits && (
-                  <span style={meta}>🏠 A domicilio</span>
-                )}
+                {svc.duration_minutes && <span style={meta}>⏱ {svc.duration_minutes} min</span>}
+                {svc.price_eur != null && <span style={meta}>💶 {svc.price_eur}€</span>}
+                {svc.allow_home_visits && <span style={meta}>🏠 A domicilio</span>}
               </div>
 
-              {/* Specialist */}
               {svc.specialists && svc.specialists.length > 0 && (
-  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #7a7974)', margin: 0 }}>
-    Con {svc.specialists[0].name}
-    {svc.specialists[0].title ? ` · ${svc.specialists[0].title}` : ''}
-  </p>
-)}
+                <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #7a7974)', margin: 0 }}>
+                  Con {svc.specialists[0].name}
+                  {svc.specialists[0].title ? ` · ${svc.specialists[0].title}` : ''}
+                </p>
+              )}
 
-              {/* CTA */}
               <div style={{
                 marginTop: '0.25rem', padding: '0.6rem',
                 background: '#01696f', color: '#fff',
