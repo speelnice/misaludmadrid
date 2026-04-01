@@ -58,7 +58,7 @@ export default function ServiciosAdmin() {
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 400, color: 'var(--text-primary)' }}>Servicios</h1>
           <p style={{ fontSize: '.875rem', color: 'var(--text-muted)', marginTop: '.25rem' }}>Tratamientos agrupados por especialista</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setEditing({ specialist_id: specialists[0]?.id ?? '', name: '', description: null, duration_minutes: null, price_eur: null, display_order: 0, active: true })}>
+        <button className="btn btn-primary" onClick={() => setEditing({ name: '', description: null, duration_minutes: null, price_eur: null, display_order: 0, active: true })}>
           + Nuevo servicio
         </button>
       </div>
