@@ -2,13 +2,11 @@
   "crons": [
     {
       "path": "/api/notifications",
-      "schedule": "0 8 * * *",
-      "comment": "Process notification queue every 5 minutes"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/notifications",
-      "schedule": "0 9 * * *",
-      "comment": "Schedule 24h reminders daily at 9am"
+      "schedule": "0 9 * * *"
     }
   ]
 }
