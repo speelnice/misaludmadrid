@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 
 type Specialist = { id: string; name: string; title: string };
 type Service = {
-  id: string; name: string; category: string;
-  duration_minutes: number; price_eur: number | null;
+  id: string; name: string; category: string | null;
+  duration_minutes: number | null; price_eur: number | null;
   deposit_eur: number | null; description: string | null;
   allow_home_visits: boolean;
   specialists: Specialist[] | null;
@@ -17,7 +17,7 @@ export function ServicePicker({ services }: { services: Service[] }) {
   const router = useRouter();
 
   // Build unique category list preserving order
-  const cats = ['Todos', ...Array.from(new Set(services.map(s => s.category)))];
+  const cats = ['Todos', ...Array.from(new Set(services.map(s => s.category).filter(Boolean)))];
   const [active, setActive] = useState('Todos');
 
   const filtered = active === 'Todos' ? services : services.filter(s => s.category === active);
