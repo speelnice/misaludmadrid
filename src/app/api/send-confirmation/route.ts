@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient();
 
-    // Load the cita with related data
     const { data: cita, error: citaErr } = await supabase
       .from('citas')
       .select(`
@@ -32,7 +31,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cita not found' }, { status: 404 });
     }
 
-    // Load clinic settings
     const { data: settings } = await supabase
       .from('settings')
       .select('key, value')
@@ -40,19 +38,16 @@ export async function POST(req: NextRequest) {
 
     const cfg = Object.fromEntries((settings || []).map(s => [s.key, s.value]));
     const refNumber = cita.id.slice(0, 8).toUpperCase();
-
     const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://misaludv3.vercel.app'}/admin/citas`;
 
-    // Skip sending if Resend key not configured
     if (!process.env.RESEND_API_KEY) {
       console.warn('[send-confirmation] RESEND_API_KEY not set, skipping email.');
       return NextResponse.json({ skipped: true });
     }
 
-    const svc  = cita.services    as { name: string; duration_minutes: number; price_eur: number | null; deposit_eur: number | null } | null;
-    const spec = cita.specialists as { name: string; title: string } | null;
+    const svc  = (Array.isArray(cita.services)    ? cita.services[0]    : cita.services)    as { name: string; duration_minutes: number; price_eur: number | null; deposit_eur: number | null } | null;
+    const spec = (Array.isArray(cita.specialists)  ? cita.specialists[0] : cita.specialists) as { name: string; title: string } | null;
 
-    // Render email HTML
     const patientHtml = await render(BookingConfirmationEmail({
       patientName:     cita.patient_name,
       serviceName:     svc?.name ?? '—',
@@ -84,30 +79,9 @@ export async function POST(req: NextRequest) {
       adminUrl,
     }));
 
-    // Send both emails in parallel
     const [patientRes, adminRes] = await Promise.allSettled([
       resend.emails.send({
         from:    FROM_ADDRESS,
         to:      [cita.patient_email],
         subject: `Confirmación de cita — ${svc?.name ?? 'MiSalud'} · ${cita.fecha}`,
-        html:    patientHtml,
-      }),
-      resend.emails.send({
-        from:    FROM_ADDRESS,
-        to:      [cfg.contact_email ?? 'admin@misalud.es'],
-        subject: `Nueva reserva: ${cita.patient_name} · ${cita.fecha} ${cita.hora_inicio}`,
-        html:    adminHtml,
-      }),
-    ]);
-
-    return NextResponse.json({
-      patient: patientRes.status === 'fulfilled' ? 'sent' : 'failed',
-      admin:   adminRes.status   === 'fulfilled' ? 'sent' : 'failed',
-    });
-
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[send-confirmation]', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
+        
