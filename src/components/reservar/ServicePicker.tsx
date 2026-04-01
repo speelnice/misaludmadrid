@@ -10,7 +10,7 @@ type Service = {
   duration_minutes: number; price_eur: number | null;
   deposit_eur: number | null; description: string | null;
   allow_home_visits: boolean;
-  specialists: Specialist | null;
+  specialists: Specialist[] | null;
 };
 
 export function ServicePicker({ services }: { services: Service[] }) {
@@ -120,12 +120,12 @@ export function ServicePicker({ services }: { services: Service[] }) {
               </div>
 
               {/* Specialist */}
-              {svc.specialists && (
-                <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #7a7974)', margin: 0 }}>
-                  Con {svc.specialists.name}
-                  {svc.specialists.title ? ` · ${svc.specialists.title}` : ''}
-                </p>
-              )}
+              {svc.specialists && svc.specialists.length > 0 && (
+  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted, #7a7974)', margin: 0 }}>
+    Con {svc.specialists[0].name}
+    {svc.specialists[0].title ? ` · ${svc.specialists[0].title}` : ''}
+  </p>
+)}
 
               {/* CTA */}
               <div style={{
