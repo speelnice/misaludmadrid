@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://misaludv3.vercel.app';
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: 'payment' as const,
       customer_email: cita.patient_email,
       metadata: {
         citaId,
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           },
         },
       }],
-      payment_method_types: ['card', 'google_pay', 'apple_pay', 'bizum', 'sepa_debit'],
+      payment_method_types: ['card'] as any,
       success_url: `${siteUrl}/reservar/confirmacion?citaId=${citaId}&paid=true`,
       cancel_url:  `${siteUrl}/reservar/confirmacion?citaId=${citaId}&paid=cancelled`,
       locale: 'es',
