@@ -144,7 +144,7 @@ export async function getAvailableDates(params: {
   const { specialistId, fromDate, toDate, centroId, durationMinutes } = params;
 
   const supabase = await createClient();
-  const weekday = [...Array(7).keys()];
+  const weekday = Array.from({ length: 7 }, (_, i) => i);
 
   // Get which weekdays this specialist works
   let rulesQuery = supabase
