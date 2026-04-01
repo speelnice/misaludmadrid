@@ -8,8 +8,7 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-// Disable body parsing — Stripe needs the raw body to verify signatures
-export const config = { api: { bodyParser: false } };
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   const sig    = req.headers.get('stripe-signature') ?? '';
