@@ -1,8 +1,4 @@
 // src/app/api/webhooks/stripe/route.ts
-// Listens for Stripe events and updates cita estado accordingly
-// Register this URL in Stripe Dashboard → Webhooks:
-//   https://yoursite.com/api/webhooks/stripe
-
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
@@ -35,7 +31,7 @@ export async function POST(req: NextRequest) {
         .update({
           estado:           'confirmada',
           pago_estado:      'pagado',
-         const session = event.data.object as Stripe.Checkout.Session;
+          pago_importe_eur: (session.amount_total ?? 0) / 100,
           pago_stripe_id:   session.payment_intent as string,
           updated_at:       new Date().toISOString(),
         })
@@ -44,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === 'checkout.session.expired') {
-    const session = event.data.object as Stripe.CheckoutSession;
+    const session = event.data.object as Stripe.Checkout.Session;
     const citaId  = session.metadata?.citaId;
     if (citaId) {
       await supabase
