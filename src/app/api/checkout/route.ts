@@ -8,7 +8,6 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(req: NextRequest) {
   try {
     const { citaId, mode } = await req.json();
-    // mode: 'deposit' | 'full'
     if (!citaId) return NextResponse.json({ error: 'citaId required' }, { status: 400 });
 
     const supabase = await createClient();
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     if (!cita) return NextResponse.json({ error: 'Cita not found' }, { status: 404 });
 
-    const svc = cita.services as { name: string; price_eur: number | null; deposit_eur: number | null } | null;
+    const svc = (Array.isArray(cita.services) ? cita.services[0] : cita.services) as { name: string; price_eur: number | null; deposit_eur: number | null } | null;
 
     const amountEur = mode === 'deposit'
       ? (svc?.deposit_eur ?? svc?.price_eur ?? 0)
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
         quantity: 1,
         price_data: {
           currency: 'eur',
-          unit_amount: Math.round(amountEur * 100), // cents
+          unit_amount: Math.round(amountEur * 100),
           product_data: {
             name: svc?.name ?? 'Cita médica',
             description: `${cita.fecha} a las ${cita.hora_inicio} · ${cita.patient_name}`,
