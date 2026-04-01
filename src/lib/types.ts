@@ -26,6 +26,7 @@ export interface Specialist {
 
 export interface Service {
   id: string;
+  specialist_id?: string | null;
   name: string;
   category: string | null;
   description: string | null;
