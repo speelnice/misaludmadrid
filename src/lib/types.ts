@@ -37,7 +37,7 @@ export interface Service {
   active: boolean;
   allow_home_visits: boolean;
   created_at: string;
-  specialists?: Pick<Specialist, 'id' | 'name' | 'title'>[];
+specialists?: Pick<Specialist, 'id' | 'name' | 'title'>[] | null;
 }
 
 export interface Centro {
