@@ -1,12 +1,9 @@
 // src/app/api/send-confirmation/route.ts
-// POST — sends patient confirmation + admin notification emails via Resend
-// Called from BookingForm after cita is saved to Supabase
-
 import { NextRequest, NextResponse } from 'next/server';
 import { render } from '@react-email/render';
 import { resend, FROM_ADDRESS } from '@/lib/resend';
 import { BookingConfirmationEmail } from '@/lib/emails/booking-confirmation';
-import { AdminNotificationEmail }   from '@/lib/emails/admin-notification';
+import { AdminNotificationEmail } from '@/lib/emails/admin-notification';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -21,7 +18,7 @@ export async function POST(req: NextRequest) {
       .select(`
         id, fecha, hora_inicio, hora_fin,
         patient_name, patient_email, patient_phone, notas,
-        services    ( name, duration_minutes, price_eur, deposit_eur ),
+        services ( name, duration_minutes, price_eur, deposit_eur ),
         specialists ( name, title )
       `)
       .eq('id', citaId)
@@ -36,7 +33,7 @@ export async function POST(req: NextRequest) {
       .select('key, value')
       .in('key', ['site_name', 'contact_phone', 'contact_email']);
 
-    const cfg = Object.fromEntries((settings || []).map(s => [s.key, s.value]));
+    const cfg = Object.fromEntries((settings || []).map((s: { key: string; value: string }) => [s.key, s.value]));
     const refNumber = cita.id.slice(0, 8).toUpperCase();
     const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://misaludv3.vercel.app'}/admin/citas`;
 
@@ -45,43 +42,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: true });
     }
 
-    const svc  = (Array.isArray(cita.services)    ? cita.services[0]    : cita.services)    as { name: string; duration_minutes: number; price_eur: number | null; deposit_eur: number | null } | null;
-    const spec = (Array.isArray(cita.specialists)  ? cita.specialists[0] : cita.specialists) as { name: string; title: string } | null;
+    const svc = (Array.isArray(cita.services) ? cita.services[0] : cita.services) as { name: string; duration_minutes: number; price_eur: number | null; deposit_eur: number | null } | null;
+    const spec = (Array.isArray(cita.specialists) ? cita.specialists[0] : cita.specialists) as { name: string; title: string } | null;
 
     const patientHtml = await render(BookingConfirmationEmail({
-      patientName:     cita.patient_name,
-      serviceName:     svc?.name ?? '—',
-      specialistName:  spec?.name ?? '—',
+      patientName: cita.patient_name,
+      serviceName: svc?.name ?? '-',
+      specialistName: spec?.name ?? '-',
       specialistTitle: spec?.title,
-      fecha:           cita.fecha,
-      horaInicio:      cita.hora_inicio,
-      horaFin:         cita.hora_fin,
+      fecha: cita.fecha,
+      horaInicio: cita.hora_inicio,
+      horaFin: cita.hora_fin,
       durationMinutes: svc?.duration_minutes ?? 0,
-      priceEur:        svc?.price_eur,
-      depositEur:      svc?.deposit_eur,
+      priceEur: svc?.price_eur,
+      depositEur: svc?.deposit_eur,
       refNumber,
-      clinicName:      cfg.site_name    ?? 'MiSalud',
-      contactPhone:    cfg.contact_phone,
-      contactEmail:    cfg.contact_email,
+      clinicName: cfg.site_name ?? 'MiSalud',
+      contactPhone: cfg.contact_phone,
+      contactEmail: cfg.contact_email,
     }));
 
     const adminHtml = await render(AdminNotificationEmail({
-      patientName:    cita.patient_name,
-      patientEmail:   cita.patient_email,
-      patientPhone:   cita.patient_phone,
-      serviceName:    svc?.name  ?? '—',
-      specialistName: spec?.name ?? '—',
-      fecha:          cita.fecha,
-      horaInicio:     cita.hora_inicio,
-      horaFin:        cita.hora_fin,
-      notas:          cita.notas,
+      patientName: cita.patient_name,
+      patientEmail: cita.patient_email,
+      patientPhone: cita.patient_phone,
+      serviceName: svc?.name ?? '-',
+      specialistName: spec?.name ?? '-',
+      fecha: cita.fecha,
+      horaInicio: cita.hora_inicio,
+      horaFin: cita.hora_fin,
+      notas: cita.notas,
       refNumber,
       adminUrl,
     }));
 
     const [patientRes, adminRes] = await Promise.allSettled([
       resend.emails.send({
-        from:    FROM_ADDRESS,
-        to:      [cita.patient_email],
-        subject: `Confirmación de cita — ${svc?.name ?? 'MiSalud'} · ${cita.fecha}`,
-        
+        from: FROM_ADDRESS,
+        to: [cita.patient_email],
+        subject: `Confirmacion de cita - ${svc?.name ?? 'MiSalud'} - ${cita.fecha}`,
+        html: patientHtml,
+      }),
+      resend.emails.send({
+        from: FROM_ADDRESS,
+        to: [cfg.contact_email ?? 'admin@misalud.es'],
+        subject: `Nueva reserva: ${cita.patient_name} - ${cita.fecha} ${cita.hora_inicio}`,
+        html: adminHtml,
+      }),
+    ]);
+
+    return NextResponse.json({
+      patient: patientRes.status === 'fulfilled' ? 'sent' : 'failed',
+      admin: adminRes.status === 'fulfilled' ? 'sent' : 'failed',
+    });
+
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[send-confirmation]', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
