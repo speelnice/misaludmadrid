@@ -23,7 +23,7 @@ export default async function ReservarPage() {
     .order('category')
     .order('display_order');
 
-  const services = (rawServices || []) as unknown as Service[];
+  const services = (rawServices || []) as any[];
 
   const { data: settings } = await supabase
     .from('settings')
