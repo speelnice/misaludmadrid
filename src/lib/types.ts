@@ -26,14 +26,17 @@ export interface Specialist {
 
 export interface Service {
   id: string;
-  specialist_id: string;
   name: string;
+  category: string | null;
   description: string | null;
   duration_minutes: number | null;
   price_eur: number | null;
+  deposit_eur: number | null;
   display_order: number;
   active: boolean;
+  allow_home_visits: boolean;
   created_at: string;
+  specialists?: Pick<Specialist, 'id' | 'name' | 'title'>[];
 }
 
 export interface Centro {
