@@ -1,7 +1,6 @@
 // src/app/reservar/page.tsx
 import { createClient } from '@/lib/supabase/server';
 import { ServicePicker } from '@/components/reservar/ServicePicker';
-import type { Service } from '@/lib/types';
 
 export const metadata = {
   title: 'Reservar cita',
