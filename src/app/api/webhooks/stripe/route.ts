@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.CheckoutSession;
+    const session = event.data.object as Stripe.Checkout.Session;
     const citaId  = session.metadata?.citaId;
 
     if (citaId && session.payment_status === 'paid') {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         .update({
           estado:           'confirmada',
           pago_estado:      'pagado',
-          pago_importe_eur: (session.amount_total ?? 0) / 100,
+         const session = event.data.object as Stripe.Checkout.Session;
           pago_stripe_id:   session.payment_intent as string,
           updated_at:       new Date().toISOString(),
         })
