@@ -1,8 +1,7 @@
 // src/app/reservar/page.tsx
-// Public booking entry — shows all active services grouped by category
-
 import { createClient } from '@/lib/supabase/server';
 import { ServicePicker } from '@/components/reservar/ServicePicker';
+import type { Service } from '@/lib/types';
 
 export const metadata = {
   title: 'Reservar cita',
@@ -12,7 +11,7 @@ export const metadata = {
 export default async function ReservarPage() {
   const supabase = await createClient();
 
-  const { data: services } = await supabase
+  const { data: rawServices } = await supabase
     .from('services')
     .select(`
       id, name, category, duration_minutes,
@@ -24,12 +23,14 @@ export default async function ReservarPage() {
     .order('category')
     .order('display_order');
 
+  const services = (rawServices || []) as unknown as Service[];
+
   const { data: settings } = await supabase
     .from('settings')
     .select('key, value')
     .in('key', ['site_name', 'contact_phone']);
 
-  const cfg = Object.fromEntries((settings || []).map(s => [s.key, s.value]));
+  const cfg = Object.fromEntries((settings || []).map((s: { key: string; value: string }) => [s.key, s.value]));
 
   return (
     <main style={{
@@ -37,7 +38,6 @@ export default async function ReservarPage() {
       background: 'var(--color-bg, #f7f6f2)',
       fontFamily: 'var(--font-body, sans-serif)',
     }}>
-      {/* Top bar */}
       <header style={{
         borderBottom: '1px solid var(--color-border, #d4d1ca)',
         padding: '1rem 2rem',
@@ -64,7 +64,6 @@ export default async function ReservarPage() {
         )}
       </header>
 
-      {/* Hero */}
       <div style={{
         textAlign: 'center', padding: '3rem 1.5rem 2rem',
         borderBottom: '1px solid var(--color-border, #d4d1ca)',
@@ -76,15 +75,14 @@ export default async function ReservarPage() {
           fontFamily: 'var(--font-display, serif)',
           marginBottom: '0.5rem',
         }}>
-          ¿Qué servicio necesitas?
+          que servicio necesitas?
         </h1>
         <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted, #7a7974)', maxWidth: '480px', margin: '0 auto' }}>
-          Elige el tratamiento y en el siguiente paso seleccionas especialista, día y hora.
+          Elige el tratamiento y en el siguiente paso seleccionas especialista, dia y hora.
         </p>
       </div>
 
-      {/* Service picker */}
-      <ServicePicker services={services || []} />
+      <ServicePicker services={services} />
     </main>
   );
 }
